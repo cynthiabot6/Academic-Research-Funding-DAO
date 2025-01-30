@@ -1,21 +1,36 @@
-
 import { describe, expect, it } from "vitest";
+import { Cl } from "@stacks/transactions";
 
 const accounts = simnet.getAccounts();
-const address1 = accounts.get("wallet_1")!;
+const researcher = accounts.get("wallet_1")!;
+const voter1 = accounts.get("wallet_2")!;
+const voter2 = accounts.get("wallet_3")!;
 
-/*
-  The test below is an example. To learn more, read the testing documentation here:
-  https://docs.hiro.so/stacks/clarinet-js-sdk
-*/
+describe("Academic Research DAO", () => {
+    it("allows submitting a research proposal", () => {
+        const submitProposal = simnet.callPublicFn(
+            "dao",
+            "submit-proposal",
+            [
+                Cl.stringAscii("Quantum Computing Research"),
+                Cl.uint(1000000)
+            ],
+            researcher
+        );
+        expect(submitProposal.result).toBeOk(Cl.uint(1));
+    });
+   
+    
+    
+    
 
-describe("example tests", () => {
-  it("ensures simnet is well initalised", () => {
-    expect(simnet.blockHeight).toBeDefined();
-  });
-
-  // it("shows an example", () => {
-  //   const { result } = simnet.callReadOnlyFn("counter", "get-counter", [], address1);
-  //   expect(result).toBeUint(0);
-  // });
+    it("prevents double voting", () => {
+      const voteResult = simnet.callPublicFn(
+          "dao",
+          "vote",
+          [Cl.uint(1)],
+          voter1
+      );
+      expect(voteResult.result).toBeErr(Cl.error(Cl.uint(101)));
+    });
 });
