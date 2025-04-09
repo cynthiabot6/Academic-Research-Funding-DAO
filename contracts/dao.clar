@@ -342,3 +342,112 @@
     )
 )
 
+
+
+(define-map milestones 
+    { proposal-id: uint, milestone-id: uint }
+    {
+        title: (string-ascii 50),
+        description: (string-ascii 200),
+        deadline: uint,
+        funding-amount: uint,
+        completed: bool
+    }
+)
+
+(define-map milestone-counts
+    { proposal-id: uint }
+    { count: uint }
+)
+
+(define-public (add-milestone (proposal-id uint) (title (string-ascii 50)) (description (string-ascii 200)) (deadline uint) (funding-amount uint))
+    (let 
+        ((proposal (unwrap! (map-get? proposals {proposal-id: proposal-id}) (err ERR-PROPOSAL-NOT-FOUND)))
+         (milestone-count (default-to { count: u0 } (map-get? milestone-counts { proposal-id: proposal-id })))
+         (new-milestone-id (+ u1 (get count milestone-count))))
+        
+        (asserts! (is-eq tx-sender (get owner proposal)) (err ERR-NOT-AUTHORIZED))
+        
+        (map-set milestones
+            { proposal-id: proposal-id, milestone-id: new-milestone-id }
+            { 
+                title: title,
+                description: description,
+                deadline: deadline,
+                funding-amount: funding-amount,
+                completed: false
+            }
+        )
+        
+        (map-set milestone-counts
+            { proposal-id: proposal-id }
+            { count: new-milestone-id }
+        )
+        
+        (ok new-milestone-id)
+    )
+)
+
+(define-public (complete-milestone (proposal-id uint) (milestone-id uint))
+    (let 
+        ((proposal (unwrap! (map-get? proposals {proposal-id: proposal-id}) (err ERR-NOT-AUTHORIZED)))
+         (milestone (unwrap! (map-get? milestones {proposal-id: proposal-id, milestone-id: milestone-id}) (err ERR-NOT-AUTHORIZED))))
+        
+        (asserts! (is-eq tx-sender (get owner proposal)) (err ERR-NOT-AUTHORIZED))
+        
+        (map-set milestones
+            { proposal-id: proposal-id, milestone-id: milestone-id }
+            (merge milestone { completed: true })
+        )
+        
+        (ok true)
+    )
+)
+
+
+
+(define-map peer-reviews
+    { proposal-id: uint, reviewer: principal }
+    {
+        technical-score: uint,
+        impact-score: uint,
+        feasibility-score: uint,
+        feedback: (string-ascii 500),
+        timestamp: uint,
+        verified: bool
+    }
+)
+
+(define-map verified-reviewers
+    { reviewer: principal }
+    { field: (string-ascii 50) }
+)
+
+(define-public (submit-peer-review 
+    (proposal-id uint) 
+    (technical-score uint)
+    (impact-score uint)
+    (feasibility-score uint)
+    (feedback (string-ascii 500)))
+    
+    (let ((proposal (unwrap! (map-get? proposals {proposal-id: proposal-id}) (err ERR-PROPOSAL-NOT-FOUND))))
+        ;; (asserts! (is-some (map-get? verified-reviewers {reviewer: tx-sender})) (err u501))
+        ;; (asserts! (and (>= technical-score u1) (<= technical-score u10)) (err u502))
+        ;; (asserts! (and (>= impact-score u1) (<= impact-score u10)) (err u502))
+        ;; (asserts! (and (>= feasibility-score u1) (<= feasibility-score u10)) (err u502))
+        
+        (map-set peer-reviews
+            { proposal-id: proposal-id, reviewer: tx-sender }
+            {
+                technical-score: technical-score,
+                impact-score: impact-score,
+                feasibility-score: feasibility-score,
+                feedback: feedback,
+                timestamp: stacks-block-height,
+                verified: true
+            }
+        )
+        
+        (ok true)
+    )
+)
