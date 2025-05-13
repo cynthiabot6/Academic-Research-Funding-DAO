@@ -451,3 +451,96 @@
         (ok true)
     )
 )
+
+
+
+(define-map research-fields
+    { field-id: uint }
+    { name: (string-ascii 50) }
+)
+
+(define-map proposal-fields
+    { proposal-id: uint, field-id: uint }
+    { primary: bool }
+)
+
+(define-map expert-fields
+    { expert: principal, field-id: uint }
+    { expertise-level: uint }
+)
+
+(define-data-var field-count uint u0)
+
+(define-public (add-research-field (name (string-ascii 50)))
+    (let ((field-id (+ u1 (var-get field-count))))
+        (map-set research-fields
+            { field-id: field-id }
+            { name: name }
+        )
+        (var-set field-count field-id)
+        (ok field-id)
+    )
+)
+
+(define-public (set-proposal-field (proposal-id uint) (field-id uint) (is-primary bool))
+    (let ((proposal (unwrap! (map-get? proposals {proposal-id: proposal-id}) (err ERR-PROPOSAL-NOT-FOUND))))
+        (asserts! (is-eq tx-sender (get owner proposal)) (err ERR-NOT-AUTHORIZED))
+        (map-set proposal-fields
+            { proposal-id: proposal-id, field-id: field-id }
+            { primary: is-primary }
+        )
+        (ok true)
+    )
+)
+
+(define-read-only (get-field-experts (field-id uint))
+    (ok "List of experts would be returned here")
+)
+
+
+(define-map funding-tiers
+    { tier-id: uint }
+    {
+        name: (string-ascii 20),
+        max-amount: uint,
+        min-votes: uint,
+        min-reviews: uint
+    }
+)
+
+(define-data-var tier-count uint u0)
+
+(define-public (create-funding-tier (name (string-ascii 20)) (max-amount uint) (min-votes uint) (min-reviews uint))
+    (let ((tier-id (+ u1 (var-get tier-count))))
+        (map-set funding-tiers
+            { tier-id: tier-id }
+            {
+                name: name,
+                max-amount: max-amount,
+                min-votes: min-votes,
+                min-reviews: min-reviews
+            }
+        )
+        (var-set tier-count tier-id)
+        (ok tier-id)
+    )
+)
+
+(define-read-only (find-tier (amount uint))
+    (ok u1)  ;; Temporary implementation - should iterate through tiers to find matching one
+)
+
+(define-read-only (get-proposal-tier (proposal-id uint))
+    (let ((proposal (unwrap! (map-get? proposals {proposal-id: proposal-id}) (err ERR-PROPOSAL-NOT-FOUND)))
+          (tier (unwrap! (find-tier (get funding-amount proposal)) (err ERR-PROPOSAL-NOT-FOUND))))
+        (ok tier)
+    )
+)
+
+(define-read-only (check-tier-requirements (proposal-id uint))
+    ;; (let ((tier (unwrap! (get-proposal-tier proposal-id) (err u404))))
+    ;;     (ok (verify-requirements proposal-id tier))
+    ;; )
+
+    (ok u1)  ;; Temporary implementation
+)
