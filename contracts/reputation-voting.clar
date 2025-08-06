@@ -63,10 +63,7 @@
         
         (asserts! (is-none existing-vote) ERR-ALREADY-VOTED)
         
-        ;; (map-set weighted-votes
-        ;;     {voter: tx-sender, proposal-id: proposal-id}
-        ;;     {vote-weight: vote-weight, voted: true}
-        ;; )
+
         
         (map-set proposal-vote-totals
             {proposal-id: proposal-id}
