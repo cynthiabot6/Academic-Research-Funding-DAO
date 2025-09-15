@@ -69,4 +69,9 @@ plan:
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: "contracts\\research-impact-tracker.clar"
             clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: subscription-alerts
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: "contracts\\subscription-alerts.clar"
+            clarity-version: 3
       epoch: "3.1"
